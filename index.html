@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open My App</title>
+    <style>
+        #installBtn {
+            display: none;
+            padding: 12px 24px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        #status {
+            margin: 20px 0;
+        }
+    </style>
+    <script>
+        let appOpened = false;
+        let storeUrl = '';
+
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param) || "";
+        }
+
+        function isAndroid() {
+            return /android/i.test(navigator.userAgent);
+        }
+
+        function isIOS() {
+            return /iPad|iPhone|iPod/.test(navigator.platform) ||
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        }
+
+        function openApp() {
+            const dataToPass = encodeURIComponent(getQueryParam("id"));
+            if (!dataToPass) {
+                alert("Missing 'id' parameter in URL!");
+                return;
+            }
+
+            // Set store URL based on platform
+            storeUrl = isAndroid() 
+                ? "https://play.google.com/store/apps/details?id=com.yemensoft.onyxdistributionv2.paidv8"
+                : "https://apps.apple.com/app/idYOUR_APPLE_ID";
+
+            // Listen for app opening
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'hidden') {
+                    appOpened = true;
+                }
+            });
+
+            // Try to open app
+            if (isAndroid()) {
+                window.location = `intent://onyxdist.config.link/#Intent;scheme=http;package=com.yemensoft.onyxdistributionv2.paidv8;S.id=${dataToPass};end`;
+            } else if (isIOS()) {
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = `myapp://open?data=${dataToPass}`;
+                document.body.appendChild(iframe);
+            }
+
+            // Show install button if app not detected after 1.5s
+            setTimeout(() => {
+                if (!appOpened) {
+                    document.getElementById('status').textContent = 
+                        "If the app didn't open automatically, please install it:";
+                    document.getElementById('installBtn').style.display = 'inline-block';
+                }
+            }, 1500);
+        }
+
+        function redirectToStore() {
+            if (storeUrl) {
+                window.location.href = storeUrl;
+            }
+        }
+
+        window.onload = openApp;
+    </script>
+</head>
+<body>
+    <h1>Opening App...</h1>
+    <p id="status"></p>
+    <button id="installBtn" onclick="redirectToStore()">
+        Install App
+    </button>
+    <p>If you have the app already, <button onclick="openApp()">Try Again</button></p>
+</body>
+</html>
